@@ -18,3 +18,5 @@ vignettes/*.pdf
 # directories to ignore
 Robs_data/
 Data_external/
+Figures/
+Results/

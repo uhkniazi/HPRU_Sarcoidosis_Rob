@@ -6,70 +6,111 @@
 
 source('Sar_rob_header.R')
 
-## data loading
+# load the new data
 csFile = file.choose()
 dfData = read.csv(csFile, header = T, row.names=1)
 head(dfData)
-# create factors
-fGroups = gsub('(\\w+)\\.\\d+', '\\1', colnames(dfData))
-fGroups = as.factor(fGroups)
-table(fGroups)
-fGroups.2 = as.character(fGroups)
-fGroups.2[fGroups.2 != 'SA'] = 'Others'
-fGroups.2 = factor(fGroups.2, levels=c('Others', 'SA'))
-# full dataset
+# add to full data
 dfData.full = dfData
+# column identifier for new dataset (training)
 fTrain = rep(T, length=ncol(dfData.full))
-
-# remove NA data for the time being
-dfData = na.omit(dfData)
-# remove any infinite values
-f = is.finite(rowSums(dfData))
-dfData = dfData[f,]
-# clean rownames for long gene names
-rn = rownames(dfData)
-rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
-rownames(dfData) = rn
-oDat.new = CData(dfData, fGroups, fGroups.2)
-
-### load the old data set
+# load old data set (used for testing)
 csFile = file.choose()
 dfData = read.csv(csFile, header = T, row.names=1)
 head(dfData)
-# create factors
-fGroups = gsub('(\\w+)\\.\\d+', '\\1', colnames(dfData))
-fGroups = as.factor(fGroups)
-table(fGroups)
-fGroups.2 = as.character(fGroups)
-fGroups.2[fGroups.2 != 'SA'] = 'Others'
-fGroups.2 = factor(fGroups.2, levels=c('Others', 'SA'))
-# join the old and new datasets
+# add to full dataset
 dfData.full = cbind(dfData.full, dfData)
 fTrain = c(fTrain, rep(F, length=ncol(dfData)))
-
-# remove NA data for the time being
-dfData = na.omit(dfData)
-# remove any infinite values
-f = is.finite(rowSums(dfData))
-dfData = dfData[f,]
-# clean rownames for long gene names
-rn = rownames(dfData)
-rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
-rownames(dfData) = rn
-oDat.old = CData(dfData, fGroups, fGroups.2)
-
-# make the combined dataset
+# remove na data
+rm(dfData)
 dfData.full = na.omit(dfData.full)
 # remove any infinite values
 f = is.finite(rowSums(dfData.full))
 dfData.full = dfData.full[f,]
+# make more sensible gene names
 rn = rownames(dfData.full)
 rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
 rownames(dfData.full) = rn
-f1 = factor(c(as.character(oDat.new@f1), as.character(oDat.old@f1)))
-f2 = factor(c(as.character(oDat.new@f2), as.character(oDat.old@f2)), levels=c('Others', 'SA'))
-oDat.full = CData(dfData.full, f1, f2)
 
+# create factors for groups 
+fGroups = gsub('(\\w+)\\..+', '\\1', colnames(dfData.full))
+fGroups = as.factor(fGroups)
+table(fGroups)
+fGroups.2 = as.character(fGroups)
+fGroups.2[fGroups.2 != 'SA'] = 'Others'
+fGroups.2 = factor(fGroups.2, levels=c('Others', 'SA'))
+
+# create object to hold this data
+oDat.full = CData(dfData.full, fGroups, fGroups.2)
+# create objects to hold new and old data
+oDat.new = CData(dfData.full[,fTrain], fGroups[fTrain], fGroups.2[fTrain])
+oDat.old = CData(dfData.full[,!fTrain], fGroups[!fTrain], fGroups.2[!fTrain])
+
+## data loading
+# csFile = file.choose()
+# dfData = read.csv(csFile, header = T, row.names=1)
+# head(dfData)
+# # create factors
+# fGroups = gsub('(\\w+)\\.\\d+', '\\1', colnames(dfData))
+# fGroups = as.factor(fGroups)
+# table(fGroups)
+# fGroups.2 = as.character(fGroups)
+# fGroups.2[fGroups.2 != 'SA'] = 'Others'
+# fGroups.2 = factor(fGroups.2, levels=c('Others', 'SA'))
+# # full dataset
+# dfData.full = dfData
+# fTrain = rep(T, length=ncol(dfData.full))
+# 
+# # remove NA data for the time being
+# dfData = na.omit(dfData)
+# # remove any infinite values
+# f = is.finite(rowSums(dfData))
+# dfData = dfData[f,]
+# # clean rownames for long gene names
+# rn = rownames(dfData)
+# rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
+# rownames(dfData) = rn
+# oDat.new = CData(dfData, fGroups, fGroups.2)
+# 
+# ### load the old data set
+# csFile = file.choose()
+# dfData = read.csv(csFile, header = T, row.names=1)
+# head(dfData)
+# # create factors
+# fGroups = gsub('(\\w+)\\.\\d+', '\\1', colnames(dfData))
+# fGroups = as.factor(fGroups)
+# table(fGroups)
+# fGroups.2 = as.character(fGroups)
+# fGroups.2[fGroups.2 != 'SA'] = 'Others'
+# fGroups.2 = factor(fGroups.2, levels=c('Others', 'SA'))
+# # join the old and new datasets
+# dfData.full = cbind(dfData.full, dfData)
+# fTrain = c(fTrain, rep(F, length=ncol(dfData)))
+# 
+# # remove NA data for the time being
+# dfData = na.omit(dfData)
+# # remove any infinite values
+# f = is.finite(rowSums(dfData))
+# dfData = dfData[f,]
+# # clean rownames for long gene names
+# rn = rownames(dfData)
+# rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
+# rownames(dfData) = rn
+# oDat.old = CData(dfData, fGroups, fGroups.2)
+# 
+# # make the combined dataset
+# dfData.full = na.omit(dfData.full)
+# # remove any infinite values
+# f = is.finite(rowSums(dfData.full))
+# dfData.full = dfData.full[f,]
+# rn = rownames(dfData.full)
+# rn = gsub('^(\\w+);+.+', replacement = '\\1', x = rn)
+# rownames(dfData.full) = rn
+# f1 = factor(c(as.character(oDat.new@f1), as.character(oDat.old@f1)))
+# f2 = factor(c(as.character(oDat.new@f2), as.character(oDat.old@f2)), levels=c('Others', 'SA'))
+# oDat.full = CData(dfData.full, f1, f2)
+
+## TAG_2
 ## set variables choosing them from the class CData object
 dfData.bk = oDat.new@df
 fGroups = oDat.new@f1
@@ -82,8 +123,8 @@ fGroups.2 = oDat.old@f2
 dfData.bk = oDat.full@df
 fGroups = oDat.full@f1
 fGroups.2 = oDat.full@f2
-
 colnames(dfData.bk) = NULL
+
 ### some quality checks - skip this if already done
 dfData = dfData.bk
 # classify data test without scaling
@@ -111,39 +152,39 @@ plot.new()
 legend('center', legend = unique(fGroups), fill=col.p[as.numeric(unique(fGroups))])
 par(p.old)
 
-# does scaling the data make a difference
-mDat = dfData
-dim(mDat)
-i = apply(mDat, 2, sd)
-head(i)
-mDat = sweep(mDat, 2, i, FUN = '/')
-apply(mDat, 2, sd)
-mDat = t(mDat)
-# pr comp quality check
-pr.out = prcomp(mDat, scale=T)
-# check eigen values
-plot(pr.out$sdev^2)
-# plot the components
-par(mfrow=c(2,2))
-col.p = rainbow(length(unique(fGroups)))
-col = col.p[as.numeric(fGroups)]
-# plot the pca components
-plot(pr.out$x[,1:2], col=col, pch=19, xlab='Z1', ylab='Z2',
-     main='PCA comp 1 and 2')
-plot(pr.out$x[,c(1,3)], col=col, pch=19, xlab='Z1', ylab='Z3',
-     main='PCA comp 1 and 3')
-plot(pr.out$x[,c(2,3)], col=col, pch=19, xlab='Z2', ylab='Z3',
-     main='PCA comp 2 and 3')
-plot.new()
-legend('center', legend = unique(fGroups), fill=col.p[as.numeric(unique(fGroups))])
-par(p.old)
+# # does scaling the data make a difference
+# mDat = dfData
+# dim(mDat)
+# i = apply(mDat, 2, sd)
+# head(i)
+# mDat = sweep(mDat, 2, i, FUN = '/')
+# apply(mDat, 2, sd)
+# mDat = t(mDat)
+# # pr comp quality check
+# pr.out = prcomp(mDat, scale=T)
+# # check eigen values
+# plot(pr.out$sdev^2)
+# # plot the components
+# par(mfrow=c(2,2))
+# col.p = rainbow(length(unique(fGroups)))
+# col = col.p[as.numeric(fGroups)]
+# # plot the pca components
+# plot(pr.out$x[,1:2], col=col, pch=19, xlab='Z1', ylab='Z2',
+#      main='PCA comp 1 and 2')
+# plot(pr.out$x[,c(1,3)], col=col, pch=19, xlab='Z1', ylab='Z3',
+#      main='PCA comp 1 and 3')
+# plot(pr.out$x[,c(2,3)], col=col, pch=19, xlab='Z2', ylab='Z3',
+#      main='PCA comp 2 and 3')
+# plot.new()
+# legend('center', legend = unique(fGroups), fill=col.p[as.numeric(unique(fGroups))])
+# par(p.old)
 ## end quality checks
 ### it appears scaling does reduce the separation between the classes
 
-### try variable selection without scaling
-# dfData.bk = oDat.new@df
-# fGroups = oDat.new@f1
-# fGroups.2 = oDat.new@f2
+## try variable selection using training data set (new data)
+dfData.bk = oDat.new@df
+fGroups = oDat.new@f1
+fGroups.2 = oDat.new@f2
 set.seed(1)
 dfData = t(dfData.bk)
 dfData = data.frame(dfData, fGroups)
@@ -155,7 +196,7 @@ dfImportance = dfImportance[order(dfImportance$MeanDecreaseAccuracy, decreasing 
 hist(dfImportance$MeanDecreaseAccuracy)
 dfImportance.SA = dfImportance[order(dfImportance$SA, decreasing = T),]
 
-# select the top few genes
+# select the top few genes looking at the distribution of error rates
 ### TAG 1
 # choose the top proteins for SA
 hist(dfImportance.SA$SA)
@@ -163,10 +204,7 @@ f = which(dfImportance.SA$SA >= 4)
 length(f)
 cvTopGenes = rownames(dfImportance.SA)[f]
 
-# subset the data based on these selected genes from old dataset
-# dfData.bk = oDat.old@df
-# fGroups = oDat.old@f1
-# fGroups.2 = oDat.old@f2
+# subset the data based on these selected genes from training dataset
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 dfData = data.frame(t(dfData))
 dfData$fGroups = fGroups.2
@@ -220,19 +258,14 @@ par(p.old)
 
 ## stop and decide
 ## if we like the variable count here, then its fine, or else go back to TAG 1 and select more variables
-# remove the variable of choice after testing
+# remove the variables which have a negative mean error
 x = tapply(df[,'MeanDecreaseAccuracy'], f, mean)
 sort(x)
 summary(x)
 i = which(x < 0)
 if (length(i) > 0) cvTopGenes = names(x)[-i]
-# i = which(cvTopGenes %in% n)
-# cvTopGenes = cvTopGenes[-i]
 
-## look at the correlation of the genes
-# dfData.bk = oDat.new@df
-# fGroups = oDat.new@f1
-# fGroups.2 = oDat.new@f2
+## look at the correlation of the genes to remove colinear genes
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 mCor = cor(t(dfData))
 i = findCorrelation(mCor, cutoff = 0.7)
@@ -240,13 +273,9 @@ n = colnames(mCor)[i]
 # remove these correlated features 
 i = which(cvTopGenes %in% n)
 cvTopGenes = cvTopGenes[-i]
-# reload the new dataframe
-# dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
-# dfData = data.frame(t(dfData))
-# dfData$fGroups = fGroups.2
 
 ## check for the miminum sized model using test and training sets
-## use selection method
+## use variable selection method
 dfData.train = oDat.new@df
 dfData.train = dfData.train[rownames(dfData.train) %in% cvTopGenes,]
 dfData.train = t(dfData.train)
@@ -303,6 +332,12 @@ cvTopGenes = names(coef(reg, i))[-1]
 
 ### cross validation with ROC
 #### CV with ROC
+# choose all data together for nested 10 fold cv
+dfData.bk = oDat.full@df
+fGroups = oDat.full@f1
+fGroups.2 = oDat.full@f2
+colnames(dfData.bk) = NULL
+
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 dfData = data.frame(t(dfData))
 dfData$fGroups = fGroups.2
