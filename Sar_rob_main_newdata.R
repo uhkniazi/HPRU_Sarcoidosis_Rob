@@ -164,9 +164,9 @@ length(f)
 cvTopGenes = rownames(dfImportance.SA)[f]
 
 # subset the data based on these selected genes from old dataset
-dfData.bk = oDat.old@df
-fGroups = oDat.old@f1
-fGroups.2 = oDat.old@f2
+# dfData.bk = oDat.old@df
+# fGroups = oDat.old@f1
+# fGroups.2 = oDat.old@f2
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 dfData = data.frame(t(dfData))
 dfData$fGroups = fGroups.2
@@ -225,14 +225,14 @@ x = tapply(df[,'MeanDecreaseAccuracy'], f, mean)
 sort(x)
 summary(x)
 i = which(x < 0)
-cvTopGenes = names(x)[-i]
+if (length(i) > 0) cvTopGenes = names(x)[-i]
 # i = which(cvTopGenes %in% n)
 # cvTopGenes = cvTopGenes[-i]
 
 ## look at the correlation of the genes
-dfData.bk = oDat.new@df
-fGroups = oDat.new@f1
-fGroups.2 = oDat.new@f2
+# dfData.bk = oDat.new@df
+# fGroups = oDat.new@f1
+# fGroups.2 = oDat.new@f2
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 mCor = cor(t(dfData))
 i = findCorrelation(mCor, cutoff = 0.7)
@@ -295,7 +295,7 @@ colnames(dfData.bk) = NULL
 dfData = dfData.bk[rownames(dfData.bk) %in% cvTopGenes,]
 dfData = data.frame(t(dfData))
 dfData$fGroups = fGroups.2
-reg = regsubsets(fGroups ~ ., data=dfData.train, nvmax = length(cvTopGenes), method='exhaustive')
+reg = regsubsets(fGroups ~ ., data=dfData, nvmax = length(cvTopGenes), method='exhaustive')
 
 # choose these variables
 cvTopGenes = names(coef(reg, i))[-1]
@@ -357,9 +357,9 @@ auc = performance(pred, 'auc')
 
 plot(perf, main=paste('ROC Prediction of for', 'SA'),
      spread.estimate='stddev', avg='vertical', spread.scale=2)
-auc = paste('auc=', signif(mean(as.numeric(auc@y.values)), digits = 3))
-cv = paste('CV Error=', signif(mean(iCv.error), 3))
-legend('bottomright', legend = c(auc, cv))
+auc.cv = paste('auc=', signif(mean(as.numeric(auc@y.values)), digits = 3))
+cv.err = paste('CV Error=', signif(mean(iCv.error), 3))
+#legend('bottomright', legend = c(auc, cv))
 abline(0, 1, lty=2)
 
 ## fit model and roc without cross validation, just on test and training data
@@ -385,8 +385,18 @@ pred = prediction(ivPred, ivLab)
 perf = performance(pred, 'tpr', 'fpr')
 auc = performance(pred, 'auc')
 
-plot(perf, main=paste('ROC Prediction of for', 'SA'))
-auc = paste('auc=', signif(mean(as.numeric(auc@y.values)), digits = 3))
-cv = paste('CV Error=', signif(mean(iCv.error), 3))
-legend('bottomright', legend = c(auc, cv))
+plot(perf, add=T, lty=3, lwd=2, col=2)#main=paste('ROC Prediction of for', 'SA'))
+auc.t = paste('t.auc=', signif(mean(as.numeric(auc@y.values)), digits = 3))
+err.t = paste('t Error=', signif(mean(iCv.error), 3))
+legend('bottomright', legend = c(auc.cv, cv.err, auc.t, err.t))
 abline(0, 1, lty=2)
+
+## plot these genes
+par(mfrow=c(1,2))
+x = stack(dfData.train)
+x$f = dfData.train$fGroups
+boxplot(values ~ f+ind, data=x, las=2, par=par(mar=c(8, 4, 2, 2)+0.1), main='New Data')
+
+x = stack(dfData.test)
+x$f = dfData.test$fGroups
+boxplot(values ~ f+ind, data=x, las=2, par=par(mar=c(8, 4, 2, 2)+0.1), main='Old Data')
