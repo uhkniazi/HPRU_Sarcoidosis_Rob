@@ -28,3 +28,6 @@ is chosen using test error rate using test data
 9- LDA model is again fit on the training data and prediction done on the test data.
 Both results from points 8 and 9 are plotted using ROC curves.
 10- Boxplots of these proteins are produced.
+
+# Sar_rob_main_newdata_2.R
+similar to previous script but removing the healthy 
